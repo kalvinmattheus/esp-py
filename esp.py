@@ -5,7 +5,9 @@ import requests
 
 # First get a token from https://eskomsepush.gumroad.com/l/api
 token = 'XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX'
-# Second find your area id with curl --location --request GET 'https://developer.sepush.co.za/business/2.0/areas_search?text=fourways' --header 'token: LICENSE_KEY'
+# Second find your area id with curl --location --request GET \
+# 'https://developer.sepush.co.za/business/2.0/areas_search?text=fourways' \
+# --header 'token: LICENSE_KEY'
 area = 'eskde-10-fourwaysext10cityofjohannesburggauteng'
 
 
@@ -46,7 +48,8 @@ def get_stage(t):
     url = 'https://developer.sepush.co.za/business/2.0/status'
     headers = {'token': t}
     response = requests.get(url, headers=headers)
-    return json.loads(response.text)['status']['eskom']['stage']  # replace eskom with capetown if relevant
+    return json.loads(response.text)['status']['eskom'][
+        'stage']  # replace eskom with capetown if relevant
 
 
 def get_schedule(a, t):
