@@ -1,11 +1,13 @@
 import json
+import os
 from datetime import datetime
-from time import sleep
 
 import requests
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+conf_dir = os.path.join(script_dir, 'conf.txt')
 try:
-    conf = open('conf.txt', 'r')
+    conf = open(conf_dir, 'r')
 except FileNotFoundError:
     conf = open('conf.txt', 'w')
     conf.writelines(['token:XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX\n',
@@ -56,7 +58,7 @@ def print_event(e):
 
 
 def print_allowance(a):
-    count = a['count'] + 2  # add two requests made in current run
+    count = a['count']
     limit = a['limit']
     remaining = int((limit - count) / 2)
     print(f'You have {remaining} requests remaining for today.')
@@ -89,11 +91,14 @@ if __name__ == '__main__':
         print('You cannot make any more requests, try again tomorrow...')
     else:
         stage = get_stage(token, municipal)
-        print(f'The current load shedding stage is: \033[1mStage {stage}\033[0m')
-        if int(stage) > 0:
+        print(f'There is currently no load shedding!')
+        if int(stage) <= 0:
+            print(f'There is currently no load shedding!')
+        else:
             schedule = get_schedule(area, token)
+            print(f'The current load shedding stage is: \033[1mStage {stage}\033[0m')
             print(f'\033[1mThe next load shedding events are scheduled for:\033[0m')
             for event in schedule:
                 print_event(event)
-                sleep(0.25)
+        allowance = get_allowance(token)
         print_allowance(allowance)
