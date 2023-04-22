@@ -94,8 +94,8 @@ if __name__ == '__main__':
         if int(stage) <= 0:
             print(f'There is currently no load shedding!')
         else:
-            schedule = get_schedule(area, token)
             print(f'The current load shedding stage is: \033[1mStage {stage}\033[0m')
+            schedule = get_schedule(area, token)
             print(f'\033[1mThe next load shedding events are scheduled for:\033[0m')
             for event in schedule:
                 print_event(event)
