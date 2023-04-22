@@ -1,14 +1,27 @@
 import json
 from datetime import datetime
+from time import sleep
 
 import requests
 
-# First get a token from https://eskomsepush.gumroad.com/l/api
-token = 'XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX'
-# Second find your area id with curl --location --request GET \
-# 'https://developer.sepush.co.za/business/2.0/areas_search?text=fourways' \
-# --header 'token: LICENSE_KEY'
-area = 'eskde-10-fourwaysext10cityofjohannesburggauteng'
+try:
+    conf = open('conf.txt', 'r')
+except FileNotFoundError:
+    conf = open('conf.txt', 'w')
+    conf.writelines(['token:XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX\n',
+                     'municipal:eskom\n',
+                     'area:eskde-10-fourwaysext10cityofjohannesburggauteng\n'])
+    conf.close()
+    print('Please complete fill in the conf.txt file before running esp-py.')
+    print('First get a token from https://eskomsepush.gumroad.com/l/api')
+    print('Second find your area id with curl --location --request GET '
+          '"https://developer.sepush.co.za/business/2.0/areas_search?text=fourways" '
+          '--header "token: LICENSE_KEY"')
+    exit(1)
+
+token = conf.readline().split(':')[1][:-1]
+municipal = conf.readline().split(':')[1][:-1]
+area = conf.readline().split(':')[1][:-1]
 
 
 def get_date_description(date_string):
@@ -34,7 +47,12 @@ def print_event(e):
     start_time = get_time_from_date_string(e['start'])
     end_time = get_time_from_date_string(e['end'])
     stage = e['note']
-    print(f'> {day} from {start_time} until {end_time} on {stage}')
+    delta = int(end_time[:2]) - int(start_time[:2])
+    delta = delta + 24 if delta < 0 else delta
+    if delta < 4:
+        print(f'> {day} from {start_time} until {end_time} on {stage}')
+    else:
+        print(f'> {day} from {start_time} until \033[91m{end_time}\033[0m on {stage}')
 
 
 def print_allowance(a):
@@ -44,12 +62,11 @@ def print_allowance(a):
     print(f'You have {remaining} requests remaining for today.')
 
 
-def get_stage(t):
+def get_stage(t, m):
     url = 'https://developer.sepush.co.za/business/2.0/status'
     headers = {'token': t}
     response = requests.get(url, headers=headers)
-    return json.loads(response.text)['status']['eskom'][
-        'stage']  # replace eskom with capetown if relevant
+    return json.loads(response.text)['status'][m]['stage']
 
 
 def get_schedule(a, t):
@@ -71,9 +88,12 @@ if __name__ == '__main__':
     if allowance['count'] == allowance['limit']:
         print('You cannot make any more requests, try again tomorrow...')
     else:
-        stage = get_stage(token)
-        schedule = get_schedule(area, token)
-        print(f'The next loadsheading events are scheduled for (stage {stage}):')
-        for event in schedule:
-            print_event(event)
+        stage = get_stage(token, municipal)
+        print(f'The current load shedding stage is: \033[1mStage {stage}\033[0m')
+        if int(stage) > 0:
+            schedule = get_schedule(area, token)
+            print(f'\033[1mThe next load shedding events are scheduled for:\033[0m')
+            for event in schedule:
+                print_event(event)
+                sleep(0.25)
         print_allowance(allowance)
