@@ -91,7 +91,6 @@ if __name__ == '__main__':
         print('You cannot make any more requests, try again tomorrow...')
     else:
         stage = get_stage(token, municipal)
-        print(f'There is currently no load shedding!')
         if int(stage) <= 0:
             print(f'There is currently no load shedding!')
         else:
